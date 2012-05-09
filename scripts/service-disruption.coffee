@@ -1,3 +1,7 @@
+# Allows Hubot to find out how the Tube is running.
+#
+# show tube status for <line> line -  Queries the endpoint for the status of that line
+
 module.exports = (robot) ->
 
   robot.respond /(show)? tube status for all( lines)?/i, (msg) ->
