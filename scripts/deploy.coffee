@@ -30,35 +30,35 @@ class Deployments
     for running in @cache
       return true if running == stage
 
-  in_progress: ->
-    @cache.join ', '
-
   recognised_stage: (stage) ->
     envs = ['staging', 'production']
     _.include envs, stage
 
+  formatted: ->
+    @cache.join ', '
+
 module.exports = (robot) ->
   deployments = new Deployments robot
 
-  robot.respond /([\w]+) deploy (start|end)/i, (msg) ->
-
+  robot.respond /([\w]+) deploy (start|begin)/i, (msg) ->
     stage = msg.match[1]
-    func = msg.match[2]
+    if_valid_stage stage, ->
+      return msg.send "STOP!! a #{stage} deployment is currently in progress" if deployments.is_running stage
+      deployments.add stage
+      msg.send "All good.. the #{stage} deployment stage is all yours"
 
-    if deployments.recognised_stage stage
-
-      if func == 'start'
-        return msg.send "STOP!! a #{stage} deployment is currently in progress" if deployments.is_running stage
-        deployments.add stage
-        msg.send "All good.. the #{stage} deployment stage is all yours"
-
-      if func == 'end'
-        return msg.send "Huh?! No #{stage} deploy is currently in progress?!"  if !deployments.is_running stage
-        deployments.remove stage
-        msg.send "Nice work... #{stage} deployment marked as completed!"
-
-    else
-      msg.send "ERROR: #{stage} is an unkwnown environment"
+  robot.respond /([\w]+) deploy (end|complete|finish)/i, (msg) ->
+    stage = msg.match[1]
+    if_valid_stage stage, ->
+      return msg.send "Huh?! No #{stage} deploy is currently in progress?!"  if !deployments.is_running stage
+      deployments.remove stage
+      msg.send "Nice work... #{stage} deployment marked as completed!"
 
   robot.respond /deploy status/i, (msg) ->
-    msg.send (deployments.in_progress() || 'No') + ' deployment(s) in progress'
+    msg.send "#{(deployments.formatted() || 'No')} deployment(s) in progress"
+
+  if_valid_stage = (stage, func) ->
+    if deployments.recognised_stage stage
+      func()
+    else
+      msg.send "ERROR: #{stage} is an unknown environment"
