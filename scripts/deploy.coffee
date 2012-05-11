@@ -1,7 +1,7 @@
 # Enquire as to whether it is safe to deploy to a certain environment
 #
-# <stage> deploy begin - Enquires if a deploy can take place
-# <stage> deploy end - Mark a deployment as complete
+# <env> deploy begin - Enquires if a deploy can take place
+# <env> deploy end - Mark a deployment as complete
 # deploy status - View current deployments
 
 # REQUIRED MODULES
@@ -17,48 +17,57 @@ class Deployments
       if @robot.brain.data.deployments
         @cache = @robot.brain.data.deployments
 
-  add: (stage) ->
-    @cache.push stage
-    @cache = _.uniq(@cache)
+  add: (deployment) ->
+    if !this.is_running deployment.stage
+      @cache.push deployment
+      @robot.brain.data.deployments = @cache
+
+  remove: (deployment) ->
+    @cache = _.filter @cache, (d) ->
+      d.env != deployment.env
     @robot.brain.data.deployments = @cache
 
-  remove: (stage) ->
-    @cache = _.without(@cache, stage)
-    @robot.brain.data.deployments = @cache
-
-  is_running: (stage) ->
+  is_running: (env) ->
     for running in @cache
-      return true if running == stage
+      return true if running.env == env
 
-  recognised_stage: (stage) ->
+  recognised_env: (env) ->
     envs = ['staging', 'production']
-    _.include envs, stage
+    _.include envs, env
 
-  formatted: ->
-    @cache.join ', '
+  status: ->
+    return "No deployments in progress" if @cache.length == 0
+    mapped = _.map @cache, (d) ->
+      "#{d.user} is deploying to #{d.env}"
+    mapped.join ', '
+
+class Deployment
+  constructor: (@user, @env) -> {}
 
 module.exports = (robot) ->
   deployments = new Deployments robot
 
+  robot.respond /deploy status/i, (msg) ->
+    msg.send deployments.status()
+
   robot.respond /([\w]+) deploy (start|begin)/i, (msg) ->
-    stage = msg.match[1]
-    if_valid_stage stage, ->
-      return msg.send "STOP!! a #{stage} deployment is currently in progress" if deployments.is_running stage
-      deployments.add stage
-      msg.send "All good.. the #{stage} deployment stage is all yours"
+    env = msg.match[1]
+    if_valid_env env, msg, ->
+      return msg.send "STOP!! a #{env} deployment is currently in progress" if deployments.is_running env
+      deployment = new Deployment msg.message.user.name, env
+      deployments.add deployment
+      msg.send "All good.. the #{env} deployment env is all yours"
 
   robot.respond /([\w]+) deploy (end|complete|finish)/i, (msg) ->
-    stage = msg.match[1]
-    if_valid_stage stage, ->
-      return msg.send "Huh?! No #{stage} deploy is currently in progress?!"  if !deployments.is_running stage
-      deployments.remove stage
-      msg.send "Nice work... #{stage} deployment marked as completed!"
+    env = msg.match[1]
+    if_valid_env env, msg, ->
+      return msg.send "Huh?! No #{env} deploy is currently in progress?!"  if !deployments.is_running env
+      deployment = new Deployment msg.message.user.name, env
+      deployments.remove deployment
+      msg.send "Nice work... #{env} deployment marked as completed!"
 
-  robot.respond /deploy status/i, (msg) ->
-    msg.send "#{(deployments.formatted() || 'No')} deployment(s) in progress"
-
-  if_valid_stage = (stage, func) ->
-    if deployments.recognised_stage stage
+  if_valid_env = (env, msg, func) ->
+    if deployments.recognised_env env
       func()
     else
-      msg.send "ERROR: #{stage} is an unknown environment"
+      msg.send "ERROR: #{env} is an unknown environment"
