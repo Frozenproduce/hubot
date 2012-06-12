@@ -41,6 +41,9 @@ class Deployments
       "#{d.user} is deploying to #{d.env}"
     mapped.join ', '
 
+  to_json: ->
+    JSON.stringify @cache
+
 class Deployment
   constructor: (@user, @env) -> {}
 
@@ -65,6 +68,10 @@ module.exports = (robot) ->
       deployment = new Deployment msg.message.user.name, env
       deployments.remove deployment
       msg.send "Nice work... #{env} deployment marked as completed!"
+
+  robot.router.get "/hubot/deploy/status", (req, res) ->
+    res.writeHead 200, {'Content-Type': 'application/json'}
+    res.end deployments.to_json()
 
   if_valid_env = (env, msg, func) ->
     if deployments.recognised_env env
