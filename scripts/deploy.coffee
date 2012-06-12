@@ -12,30 +12,30 @@ _  = require("underscore")
 class Deployments
   constructor: (@robot) ->
     @cache = []
+    @envs = ['staging', 'production']
 
     @robot.brain.on 'loaded', =>
       if @robot.brain.data.deployments
         @cache = @robot.brain.data.deployments
 
-  add: (deployment) ->
-    if !this.is_running deployment.stage
+  start: (deployment) ->
+    if !this.in_progress deployment.stage
       @cache.push deployment
       @robot.brain.data.deployments = @cache
 
-  remove: (deployment) ->
+  finish: (deployment) ->
     @cache = _.filter @cache, (d) ->
       d.env != deployment.env
     @robot.brain.data.deployments = @cache
 
-  is_running: (env) ->
+  in_progress: (env) ->
     for running in @cache
       return true if running.env == env
 
-  recognised_env: (env) ->
-    envs = ['staging', 'production']
-    _.include envs, env
+  valid_env: (env) ->
+    _.include @envs, env
 
-  status: ->
+  to_s: ->
     return "No deployments in progress" if @cache.length == 0
     mapped = _.map @cache, (d) ->
       "#{d.user} is deploying to #{d.env}"
@@ -51,30 +51,28 @@ module.exports = (robot) ->
   deployments = new Deployments robot
 
   robot.respond /deploy status/i, (msg) ->
-    msg.send deployments.status()
+    msg.send deployments.to_s()
 
   robot.respond /([\w]+) deploy (start|begin)/i, (msg) ->
     env = msg.match[1]
     if_valid_env env, msg, ->
-      return msg.send "STOP!! a #{env} deployment is currently in progress" if deployments.is_running env
-      deployment = new Deployment msg.message.user.name, env
-      deployments.add deployment
-      msg.send "All good.. the #{env} deployment env is all yours"
+      return msg.send "STOP!!! Nein nein nein!! A #{env} deployment is currently in progress!" if deployments.in_progress env
+      deployments.start new Deployment msg.message.user.name, env
+      msg.send "You're my boy #{msg.message.user.name}, deploy the s**t out of that!! The #{env} deployment environment is all yours"
 
   robot.respond /([\w]+) deploy (end|complete|finish)/i, (msg) ->
     env = msg.match[1]
     if_valid_env env, msg, ->
-      return msg.send "Huh?! No #{env} deploy is currently in progress?!"  if !deployments.is_running env
-      deployment = new Deployment msg.message.user.name, env
-      deployments.remove deployment
-      msg.send "Nice work... #{env} deployment marked as completed!"
+      return msg.send "Huh?! No #{env} deploy is currently in progress?!"  if !deployments.in_progress env
+      deployments.finish new Deployment msg.message.user.name, env
+      msg.send "Wow.. You must some kind of sorcerer, #{msg.message.user.name}. Right on!!... #{env} deployment marked as completed!"
 
   robot.router.get "/hubot/deploy/status", (req, res) ->
     res.writeHead 200, {'Content-Type': 'application/json'}
     res.end deployments.to_json()
 
   if_valid_env = (env, msg, func) ->
-    if deployments.recognised_env env
+    if deployments.valid_env env
       func()
     else
-      msg.send "ERROR: #{env} is an unknown environment"
+      msg.send "ERROR: Wat!?! #{env} is not an environment!! Go make everyone a cup of tea and think about what you've done"
