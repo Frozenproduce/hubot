@@ -56,18 +56,18 @@ module.exports = (robot) ->
   robot.respond /([\w]+) deploy (start|begin)/i, (msg) ->
     env = msg.match[1]
     if_valid_env env, msg, ->
-      return msg.send "STOP!!! Nein nein nein!! A #{env} deployment is currently in progress!" if deployments.in_progress env
+      return msg.send deployment_in_progress_msg(env) if deployments.in_progress env
       deployments.start new Deployment msg.message.user.name, env
-      msg.send "You're my boy #{msg.message.user.name}, deploy the s**t out of that!! The #{env} deployment environment is all yours"
+      msg.send deployment_started_msg(msg.message.user.name, env)
 
   robot.respond /([\w]+) deploy (end|complete|finish)/i, (msg) ->
     env = msg.match[1]
     if_valid_env env, msg, ->
-      return msg.send "Huh?! No #{env} deploy is currently in progress?!"  if !deployments.in_progress env
+      return msg.send deployment_not_in_progress_msg(env) if !deployments.in_progress env
       deployments.finish new Deployment msg.message.user.name, env
-      msg.send "Wow.. You must some kind of sorcerer, #{msg.message.user.name}. Right on!!... #{env} deployment marked as completed!"
+      msg.send deployment_finished_msg(msg.message.user.name, env)
 
-  robot.router.get "/hubot/deploy/status", (req, res) ->
+  robot.router.get "/hubot/deployments", (req, res) ->
     res.writeHead 200, {'Content-Type': 'application/json'}
     res.end deployments.to_json()
 
@@ -75,4 +75,19 @@ module.exports = (robot) ->
     if deployments.valid_env env
       func()
     else
-      msg.send "ERROR: Wat!?! #{env} is not an environment!! Go make everyone a cup of tea and think about what you've done"
+      msg.send invalid_environment_msg(env)
+
+  deployment_started_msg = (user, env) ->
+    "You're my boy #{user}, deploy the s**t out of that!! The #{env} deployment environment is all yours"
+
+  deployment_finished_msg = (user, env) ->
+    "Wow.. You must some kind of sorcerer, #{user}. Right on!!... #{env} deployment marked as completed!"
+
+  deployment_in_progress_msg = (env) ->
+    "STOP!!! Nein nein nein!! A #{env} deployment is currently in progress!"
+
+  invalid_environment_msg = (env) ->
+    "ERROR: Wat!?! #{env} is not an environment!! Go make everyone a cup of tea and think about what you've done"
+
+  deployment_not_in_progress_msg = (env) ->
+    "Huh?! No #{env} deploy is currently in progress?!"
