@@ -71,6 +71,29 @@ module.exports = (robot) ->
     res.writeHead 200, {'Content-Type': 'application/json'}
     res.end deployments.to_json()
 
+  robot.router.put "/hubot/deployments", (req, res) ->
+    env = req.body.environment
+    user = req.body.user
+    if deployments.in_progress env || !deployments.valid_env env
+      res.writeHead 403
+      res.end
+      return
+    deployments.start new Deployment user, env
+    res.writeHead 201
+    res.end
+
+  robot.router.delete "/hubot/deployments", (req, res) ->
+    env = req.body.environment
+    user = req.body.user
+    if !deployments.in_progress env || !deployments.valid_env env
+      res.writeHead 403
+      res.end
+      return
+    deployments.finish new Deployment user, env
+    res.writeHead 204
+    res.end
+
+
   if_valid_env = (env, msg, func) ->
     if deployments.valid_env env
       func()
