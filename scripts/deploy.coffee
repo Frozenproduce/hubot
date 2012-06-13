@@ -44,6 +44,10 @@ class Deployments
   to_json: ->
     JSON.stringify @cache
 
+  clear: ->
+    @cache = []
+    @robot.brain.data.deployments = @cache
+
 class Deployment
   constructor: (@user, @env) -> {}
 
@@ -66,6 +70,10 @@ module.exports = (robot) ->
       return msg.send deployment_not_in_progress_msg(env) if !deployments.in_progress env
       deployments.finish new Deployment msg.message.user.name, env
       msg.send deployment_finished_msg(msg.message.user.name, env)
+
+  robot.respond /deployments clear all/i, (msg) ->
+    deployments.clear()
+    msg.send deployments_cleared_msg()
 
   robot.router.get "/hubot/deployments", (req, res) ->
     res.writeHead 200, {'Content-Type': 'application/json'}
@@ -106,6 +114,9 @@ module.exports = (robot) ->
 
   deployment_not_in_progress_msg = (env) ->
     "Huh?! No #{env} deploy is currently in progress?!"
+
+  deployments_cleared_msg = ->
+    "Deployments cleared"
 
   respond = (res, status_code) ->
     res.writeHead status_code, {'Content-Type': 'text/plain'}
