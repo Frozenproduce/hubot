@@ -74,25 +74,16 @@ module.exports = (robot) ->
   robot.router.put "/hubot/deployments", (req, res) ->
     env = req.body.environment
     user = req.body.user
-    if deployments.in_progress env || !deployments.valid_env env
-      res.writeHead 403
-      res.end
-      return
+    return respond(res, 403) if deployments.in_progress env || !deployments.valid_env env
     deployments.start new Deployment user, env
-    res.writeHead 201
-    res.end
+    respond(res, 201)
 
   robot.router.delete "/hubot/deployments", (req, res) ->
     env = req.body.environment
     user = req.body.user
-    if !deployments.in_progress env || !deployments.valid_env env
-      res.writeHead 403
-      res.end
-      return
+    return respond(res, 403) if !deployments.in_progress env || !deployments.valid_env env
     deployments.finish new Deployment user, env
-    res.writeHead 204
-    res.end
-
+    respond(res, 204)
 
   if_valid_env = (env, msg, func) ->
     if deployments.valid_env env
@@ -114,3 +105,7 @@ module.exports = (robot) ->
 
   deployment_not_in_progress_msg = (env) ->
     "Huh?! No #{env} deploy is currently in progress?!"
+
+  respond = (res, status_code) ->
+    res.writeHead status_code, {'Content-Type': 'text/plain'}
+    res.end ''
