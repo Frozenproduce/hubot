@@ -76,7 +76,8 @@ module.exports = (robot) ->
     user = req.body.user
     return respond(res, 403) if deployments.in_progress env || !deployments.valid_env env
     deployments.start new Deployment user, env
-    respond(res, 201)
+    res.writeHead 201, {'Content-Type': 'application/json'}
+    res.end JSON.stringify { 'user' : user, 'environment' : env }
 
   robot.router.delete "/hubot/deployments", (req, res) ->
     env = req.body.environment
