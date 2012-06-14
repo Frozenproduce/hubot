@@ -2,9 +2,16 @@
 #
 # show tube status for <line> line -  Queries the endpoint for the status of that line
 
+_  = require("underscore")
+
 module.exports = (robot) ->
 
-  robot.respond /(show)? tube status for all( lines)?/i, (msg) ->
+  good_service_statuses = ['Good Service']
+  average_statuses = ['Minor Delays']
+  bad_statuses = ['Severe Delays', 'Part Closure']
+  closed_statuses = ['Planned Closure']
+
+  robot.respond /tube status/i, (msg) ->
     msg.http("http://service-disruption.herokuapp.com/network")
       .get() (err, res, body) ->
         if res.statusCode == 200
@@ -18,16 +25,24 @@ module.exports = (robot) ->
           msg.send "NEIN, NEIN, NEIN, NEIN, NEIN!"
 
 
-  robot.respond /(show)? tube status( for)? (.*)line?/i, (msg) ->
-    query = msg.match[3].trim().replace(/\s+/g, '-').toLowerCase()
+  robot.respond /is the (.*)line? fucked\?/i, (msg) ->
+    console.log msg.match
+    query = msg.match[1].trim().replace(/\s+/g, '-').toLowerCase()
     console.log query
     msg.http("http://service-disruption.herokuapp.com/network/#{query}")
       .get() (err, res, body) ->
         if res.statusCode == 200
           line = JSON.parse(body)
-          msg.send "The #{line.line.name} line is currently running with #{line.line.status.status_description}"
+          if _(good_service_statuses).include(line.line.status.status_description)
+            msg.send "Nope it's all good, no problems reported"
+          if _(average_statuses).include(line.line.status.status_description)
+            msg.send "Well it's semi-fucked, TfL says: '#{line.line.status.status_details}'"
+          if _(bad_statuses).include(line.line.status.status_description)
+            msg.send "Totally fuckeyed mate, best to avoid, Tfl says: '#{line.line.status.status_details}'"
+          if _(closed_statuses).include(line.line.status.status_description)
+            msg.send "No chance, it's a planned closure, you should really pay attention to the TfL website..."
         else
-          msg.send "Achievement unlocked: [GOING NOWHERE UNDERGROUND] no tube line of that name exists"
+          msg.send "No line by that name sonny, you sure you even live in London?"
 
 
 
