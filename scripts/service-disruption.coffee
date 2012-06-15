@@ -7,9 +7,9 @@ _  = require("underscore")
 module.exports = (robot) ->
 
   good_service_statuses = ['Good Service']
-  average_statuses = ['Minor Delays']
-  bad_statuses = ['Severe Delays', 'Part Closure']
-  closed_statuses = ['Planned Closure']
+  average_statuses = ['Minor Delays', 'Part Suspended']
+  bad_statuses = ['Severe Delays']
+  closed_statuses = ['Planned Closure', 'Part Closure']
 
   robot.respond /tube status/i, (msg) ->
     msg.http("http://service-disruption.herokuapp.com/network")
