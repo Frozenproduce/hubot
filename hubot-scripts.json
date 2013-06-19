@@ -2,7 +2,6 @@
 "abstract.coffee",
 "adult.coffee",
 "airbrake.coffee",
-"ambush.coffee",
 "animal.coffee",
 "ascii.coffee",
 "bang-bang.coffee",
@@ -60,7 +59,6 @@
 "rubygems.coffee",
 "sensitive.coffee",
 "shipit.coffee",
-"shorten.coffee",
 "sigh.coffee",
 "sosearch.coffee",
 "sudo.coffee",
@@ -77,6 +75,5 @@
 "wikipedia.coffee",
 "word-of-the-day.coffee",
 "wunderground.coffee",
-"xkcd.coffee",
-"yomama.coffee"
+"xkcd.coffee"
 ]
