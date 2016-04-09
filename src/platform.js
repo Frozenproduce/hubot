@@ -23,7 +23,9 @@ function getStatusForEnv(conn, name) {
 }
 
 function writeResponse(item) {
-  return `App: ${item.EnvironmentName} - ${item.HealthStatus} - P95:${item.ApplicationMetrics.Latency.P95}s`;
+  const rate = item.ApplicationMetrics.RequestCount / item.ApplicationMetrics.Duration;
+  const p95 = item.ApplicationMetrics.Latency.P95;
+  return `${item.EnvironmentName} - ${item.HealthStatus} - P95:${p95}s - Rate ${rate}/s`;
 }
 
 function transformResults(payloads) {
@@ -32,10 +34,14 @@ function transformResults(payloads) {
 
 export default robot => {
   robot.respond(/platform status/, res => {
-    const conn = new AWS.ElasticBeanstalk();
-    Promise.all(apps.map(app => getStatusForEnv(conn, app)))
-      .then(transformResults)
-      .then(statuses => res.send(statuses.join('\n')))
-      .catch(err => res.send(JSON.stringify(err, null, 4)));
+    if (robot.auth.hasRole(res.envelope.user, 'developer')) {
+      const conn = new AWS.ElasticBeanstalk();
+      Promise.all(apps.map(app => getStatusForEnv(conn, app)))
+        .then(transformResults)
+        .then(statuses => res.send(`\nREPORT:\n${statuses.join('\n')}`))
+        .catch(err => res.send(JSON.stringify(err, null, 4)));
+    } else {
+      res.send('Sorry, you lack the right permissions to do that');
+    }
   });
 };
