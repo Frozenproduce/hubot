@@ -67,6 +67,7 @@ export default robot => {
               fallback: `Platform Status Report:\n${fallbacks.join('\n')}`,
               title: 'Platform Status Report',
               fields: statuses.map(({ field }) => field),
+              mrkdwn_in: ['fields'],
             },
           });
         })
