@@ -17,6 +17,18 @@ const apps = [
   'viewers-service',
 ];
 
+const statuses = {
+  Green: ['😀', '🕶', '✨', '👍', '😺', '🎉'],
+  Yellow: ['😬', '😰', '😮', '💔'],
+  Red: ['🔥', '💀', '🌋', '😱', '👎'],
+  Grey: ['👻', '👽', '🤖']
+};
+
+function statusIndicator(colour) {
+  const indicators = statuses[colour];
+  return indicators[Math.floor(Math.random() * indicators.length)];
+}
+
 function getStatusForEnv(conn, name) {
   const params = { AttributeNames: ['All'], EnvironmentName: `${name}-blue` };
   return conn.describeEnvironmentHealth(params).promise()
@@ -25,7 +37,15 @@ function getStatusForEnv(conn, name) {
 function writeResponse(item) {
   const rate = item.ApplicationMetrics.RequestCount / item.ApplicationMetrics.Duration;
   const p95 = item.ApplicationMetrics.Latency.P95;
-  return `${item.EnvironmentName} - ${item.HealthStatus} - P95:${p95}s - Rate ${rate}/s`;
+  const status = statusIndicator(item.Color);
+  return {
+    fallback: `${status} ${item.EnvironmentName} - ${item.HealthStatus} - P95: ${p95}s - Rate ${rate}/s`,
+    field: {
+      title: item.EnvironmentName,
+      value: `${status} _*${item.HealthStatus}*_          P95: *${p95}s*          Rate: *${rate}/s*`,
+      short: true
+    },
+  };
 }
 
 function transformResults(payloads) {
@@ -38,8 +58,19 @@ export default robot => {
       const conn = new AWS.ElasticBeanstalk();
       Promise.all(apps.map(app => getStatusForEnv(conn, app)))
         .then(transformResults)
-        .then(statuses => res.send(`\nREPORT:\n${statuses.join('\n')}`))
-        .catch(err => res.send(JSON.stringify(err, null, 4)));
+        .then(statuses => {
+          const fallbacks = statuses.map(({ fallback }) => fallback);
+
+          robot.emit('slack.attachment', {
+            message: res,
+            content: {
+              fallback: `Platform Status Report:\n${fallbacks.join('\n')}`,
+              title: 'Platform Status Report',
+              fields: statuses.map(({ field }) => field),
+            },
+          });
+        })
+        .catch(err => res.send(err.stack || JSON.stringify(err, null, 4)));
     } else {
       res.send('Sorry, you lack the right permissions to do that');
     }
