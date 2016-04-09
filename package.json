@@ -4,6 +4,9 @@
   "private": true,
   "author": "Hammer <john@musicglue.com>",
   "description": "Does the thing",
+  "scripts": {
+    "postinstall": "babel -d scripts/ src/"
+  },
   "dependencies": {
     "hubot": "^2.18.0",
     "hubot-diagnostics": "0.0.1",
@@ -22,5 +25,11 @@
   },
   "engines": {
     "node": "5.X"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.7.0",
+    "babel-core": "^6.7.0",
+    "babel-plugin-add-module-exports": "^0.1.2",
+    "babel-preset-node5": "^11.0.1"
   }
 }
