@@ -53,7 +53,7 @@ function transformResults(payloads) {
 }
 
 export default robot => {
-  robot.respond(/platform status/, res => {
+  robot.respond(/.*platform status.*/i, res => {
     if (robot.auth.hasRole(res.envelope.user, 'developer')) {
       const conn = new AWS.ElasticBeanstalk();
       Promise.all(apps.map(app => getStatusForEnv(conn, app)))
