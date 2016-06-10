@@ -2,13 +2,11 @@ import AWS from 'aws-sdk';
 
 const apps = [
   'basket-service',
-  'discounts-service',
   'events-service',
   'graph',
   'payment-gateways',
   'products-service',
   'profiles-directory',
-  'profiles-renderer',
   'reservations',
   'router',
   'shrinkray',
