@@ -33,17 +33,18 @@ function getStatusForEnv(conn, name) {
 }
 
 function writeResponse(item) {
-  const rate = item.ApplicationMetrics.RequestCount / item.ApplicationMetrics.Duration;
+  const rawRate = item.ApplicationMetrics.RequestCount / item.ApplicationMetrics.Duration;
+  const rate = isNaN(rate) ? '?' : `${rate}/s`;
   const p95 = item.ApplicationMetrics.Latency
     ? `${item.ApplicationMetrics.Latency.P95}s`
-    : 'unknown';
+    : '?';
 
   const status = statusIndicator(item.Color);
   return {
-    fallback: `${status} ${item.EnvironmentName} - ${item.HealthStatus} - P95: ${p95} - Rate ${rate}/s`,
+    fallback: `${status} ${item.EnvironmentName} - ${item.HealthStatus} - P95: ${p95} - Rate ${rate}`,
     field: {
       title: item.EnvironmentName,
-      value: `${status} _*${item.HealthStatus}*_          P95: *${p95}*          Rate: *${rate}/s*`,
+      value: `${status} _*${item.HealthStatus}*_       P95: *${p95}*       Rate: *${rate}*`,
       short: true
     },
   };
