@@ -1,4 +1,5 @@
 import AWS from 'aws-sdk';
+import { awsConfig } from './awsConfig';
 
 const apps = [
   'basket-service',
@@ -55,9 +56,9 @@ function transformResults(payloads) {
 }
 
 export default robot => {
-  robot.respond(/.*platform status.*/i, res => {
+  robot.respond(/.*platform status(\s+\w+)?.*/i, res => {
     if (robot.auth.hasRole(res.envelope.user, 'developer')) {
-      const conn = new AWS.ElasticBeanstalk();
+      const conn = new AWS.ElasticBeanstalk(awsConfig(res.match[1]));
       Promise.all(apps.map(app => getStatusForEnv(conn, app)))
         .then(transformResults)
         .then(statuses => {
