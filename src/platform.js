@@ -34,7 +34,7 @@ function getStatusForEnv(conn, name) {
 
 function writeResponse(item) {
   const rawRate = item.ApplicationMetrics.RequestCount / item.ApplicationMetrics.Duration;
-  const rate = isNaN(rate) ? '?' : `${rate}/s`;
+  const rate = isNaN(rawRate) ? '?' : `${rawRate}/s`;
   const p95 = item.ApplicationMetrics.Latency
     ? `${item.ApplicationMetrics.Latency.P95}s`
     : '?';
