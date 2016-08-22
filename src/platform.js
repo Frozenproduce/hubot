@@ -1,14 +1,13 @@
 import AWS from 'aws-sdk';
+import { awsConfig } from './awsConfig';
 
 const apps = [
   'basket-service',
-  'discounts-service',
   'events-service',
   'graph',
   'payment-gateways',
   'products-service',
   'profiles-directory',
-  'profiles-renderer',
   'reservations',
   'router',
   'shrinkray',
@@ -35,14 +34,18 @@ function getStatusForEnv(conn, name) {
 }
 
 function writeResponse(item) {
-  const rate = item.ApplicationMetrics.RequestCount / item.ApplicationMetrics.Duration;
-  const p95 = item.ApplicationMetrics.Latency.P95;
+  const rawRate = item.ApplicationMetrics.RequestCount / item.ApplicationMetrics.Duration;
+  const rate = isNaN(rawRate) ? '?' : `${rawRate}/s`;
+  const p95 = item.ApplicationMetrics.Latency
+    ? `${item.ApplicationMetrics.Latency.P95}s`
+    : '?';
+
   const status = statusIndicator(item.Color);
   return {
-    fallback: `${status} ${item.EnvironmentName} - ${item.HealthStatus} - P95: ${p95}s - Rate ${rate}/s`,
+    fallback: `${status} ${item.EnvironmentName} - ${item.HealthStatus} - P95: ${p95} - Rate ${rate}`,
     field: {
       title: item.EnvironmentName,
-      value: `${status} _*${item.HealthStatus}*_          P95: *${p95}s*          Rate: *${rate}/s*`,
+      value: `${status} _*${item.HealthStatus}*_       P95: *${p95}*       Rate: *${rate}*`,
       short: true
     },
   };
@@ -53,9 +56,9 @@ function transformResults(payloads) {
 }
 
 export default robot => {
-  robot.respond(/platform status/, res => {
+  robot.respond(/.*platform status(\s+\w+)?.*/i, res => {
     if (robot.auth.hasRole(res.envelope.user, 'developer')) {
-      const conn = new AWS.ElasticBeanstalk();
+      const conn = new AWS.ElasticBeanstalk(awsConfig(res.match[1]));
       Promise.all(apps.map(app => getStatusForEnv(conn, app)))
         .then(transformResults)
         .then(statuses => {
