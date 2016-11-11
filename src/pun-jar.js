@@ -20,4 +20,22 @@ export default robot => {
       res.reply(`Remember\n> ${res.random(originalReasons)}`);
     }
   });
+
+  robot.respond(/puns (.*$)/i, res => {
+    const user = res.match[1].trim().toLowerCase();
+    const puns = robot.brain.get(`punjar.${user}.count`) || 0
+    const reasons = robot.brain.get(`punjar.${user}.reasons`) || [];
+
+    const reasonsMsg = reasons.map(r => `- ${r}`).join('\n');
+
+    const baseMsg = `${user} has made ${puns} puns so far.`;
+
+    if (reasonsMsg) {
+      res.reply(`${baseMsg} Some of the worst:\n\n${reasonsMsg}`);
+    } else if (puns === 0) {
+      res.reply(baseMsg);
+    } else {
+      res.reply(`${baseMsg} I can't remember any specifics though.`);
+    }
+  });
 };
