@@ -1,4 +1,0 @@
-{
-  "presets": ["node5"],
-  "plugins": ["add-module-exports"]
-}
