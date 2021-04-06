@@ -5,6 +5,7 @@
   "author": "Hammer <john@musicglue.com>",
   "description": "Does the thing",
   "scripts": {
+    "postinstall": "cp src/*.js scripts/",
     "prettier": "prettier -w -l src/*.js"
   },
   "dependencies": {
