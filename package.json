@@ -4,7 +4,9 @@
   "private": true,
   "author": "Hammer <john@musicglue.com>",
   "description": "Does the thing",
-  "scripts": {},
+  "scripts": {
+    "prettier": "prettier -w -l src/*.js"
+  },
   "dependencies": {
     "aws-sdk": "^2.880.0",
     "hubot": "^3.3.2",
@@ -25,5 +27,8 @@
   },
   "engines": {
     "node": "14.X"
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1"
   }
 }

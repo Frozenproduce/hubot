@@ -1,15 +1,13 @@
-export default robot => {
-  robot.respond(/.*pun.?jar (.*$)/i, res => {
+export default (robot) => {
+  robot.respond(/.*pun.?jar (.*$)/i, (res) => {
     const end = res.match[1];
-    const [u, ...bits] = end.split('for');
-    const reason = bits.join('for').trim();
+    const [u, ...bits] = end.split("for");
+    const reason = bits.join("for").trim();
     const user = u.trim().toLowerCase();
 
     const puns = (robot.brain.get(`punjar.${user}.count`) || 0) + 1;
     const originalReasons = robot.brain.get(`punjar.${user}.reasons`) || [];
-    const reasons = reason
-      ? originalReasons.concat([reason])
-      : originalReasons;
+    const reasons = reason ? originalReasons.concat([reason]) : originalReasons;
 
     robot.brain.set(`punjar.${user}.count`, puns);
     robot.brain.set(`punjar.${user}.reasons`, reasons);
@@ -21,12 +19,12 @@ export default robot => {
     }
   });
 
-  robot.respond(/puns (.*$)/i, res => {
+  robot.respond(/puns (.*$)/i, (res) => {
     const user = res.match[1].trim().toLowerCase();
-    const puns = robot.brain.get(`punjar.${user}.count`) || 0
+    const puns = robot.brain.get(`punjar.${user}.count`) || 0;
     const reasons = robot.brain.get(`punjar.${user}.reasons`) || [];
 
-    const reasonsMsg = reasons.map(r => `- ${r}`).join('\n');
+    const reasonsMsg = reasons.map((r) => `- ${r}`).join("\n");
 
     const baseMsg = `${user} has made ${puns} puns so far.`;
 
