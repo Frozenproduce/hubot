@@ -23,7 +23,6 @@
     "hubot-maps": "0.0.2",
     "hubot-plusplus": "^1.2.3",
     "hubot-pugme": "^0.1.0",
-    "hubot-quote": "KeiferMiller/hubot-quote#05d5fd5b5176e69c5e1d2aa2f22a2d45b3f0f44a",
     "hubot-redis-brain": "0.0.3",
     "hubot-rules": "^0.1.1",
     "hubot-scripts": "^2.16.2",
