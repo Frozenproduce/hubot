@@ -5,8 +5,8 @@
   "author": "Hammer <john@musicglue.com>",
   "description": "Does the thing",
   "scripts": {
-    "postinstall": "cp src/*.js scripts/",
-    "prettier": "prettier -w -l src/*.js"
+    "postinstall": "cp src/* scripts/",
+    "prettier": "prettier -w -l src/*.mjs"
   },
   "dependencies": {
     "aws-sdk": "^2.880.0",
